@@ -1,0 +1,39 @@
+prd:
+  catalog_name: honeywell_mlops_prd
+  schema_name: honeywell
+acc:
+  catalog_name: honeywell_mlops_acc
+  schema_name: honeywell
+dev:
+  catalog_name: honeywell_mlops_dev
+  schema_name: honeywell
+
+input_data_path: ../data/laptop_battery_health_usage.csv
+
+experiment_name_basic: /Shared/honeywell-basic
+experiment_name_custom: /Shared/honeywell-custom
+
+parameters:
+  learning_rate: 0.01
+  n_estimators: 1000
+  max_depth: 6
+
+
+num_features:
+  - SOC
+  - Voltage
+  - Current
+  - Battery_Temp
+  - Ambient_Temp
+  - Charging_Duration
+  - Degradation Rate
+  - Efficiency
+  - Charging_Cycles
+
+cat_features:
+  - Battery_Type
+  - EV_Model
+  - Charging_Mode
+
+
+target: Optimal_Charging_Duration_Class

@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+version.txt
+src/honeywell/__init__.py
+src/honeywell/config.py
+src/honeywell.egg-info/PKG-INFO
+src/honeywell.egg-info/SOURCES.txt
+src/honeywell.egg-info/dependency_links.txt
+src/honeywell.egg-info/requires.txt
+src/honeywell.egg-info/top_level.txt

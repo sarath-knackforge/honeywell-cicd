@@ -1,0 +1,62 @@
+# trigger:
+#   branches:
+#     include:
+#       - main
+
+# variables:
+#   # Variable group from Azure DevOps Library
+#   - group: dbw-cicd-dev
+
+#   # Agent image
+#   - name: vmImageName
+#     value: windows-latest
+
+#   # Notebooks folder path
+#   - name: notebooksPath
+#     value: notebook
+
+# pool:
+#   vmImage: $(vmImageName)
+
+# stages:
+#   - template: templates/deploy-notebook.yml
+#     parameters:
+#       stageId: Deploy_to_Dev_Environment
+#       env: dev
+#       environmentName: $(dev-environment-name)
+#       resourceGroupName: $(dev-resource-group-name)
+#       serviceConnection: $(dev-service-connection-name)
+#       notebooksPath: $(notebooksPath)
+
+
+# bcz of not having entra id i used self hosted virtual machine
+
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  # Variable group from Azure DevOps Library
+  - group: dbw-cicd-dev
+
+  # Agent image
+  - name: vmImageName
+    value: windows-latest
+
+  # Notebooks folder path
+  - name: notebooksPath
+    value: notebook
+
+pool:
+  vmImage: ubuntu-latest #$(vmImageName)
+
+stages:
+  - template: templates/deploy-notebook.yml
+    parameters:
+      stageId: Deploy_to_Dev_Environment
+      env: dev
+      environmentName: $(dev-environment-name)
+      resourceGroupName: $(dev-resource-group-name)
+      serviceConnection: $(dev-service-connection-name)
+      notebooksPath: $(notebooksPath)
