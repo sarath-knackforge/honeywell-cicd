@@ -8,7 +8,7 @@ dev:
   catalog_name: honeywell_mlops_dev
   schema_name: honeywell
 
-input_data_path: ../data/laptop_battery_health_usage.csv
+input_data_path: ../data/ev_battery_charging_data.csv
 
 experiment_name_basic: /Shared/honeywell-basic
 experiment_name_custom: /Shared/honeywell-custom
@@ -26,7 +26,7 @@ num_features:
   - Battery_Temp
   - Ambient_Temp
   - Charging_Duration
-  - Degradation Rate
+  - Degradation_Rate
   - Efficiency
   - Charging_Cycles
 

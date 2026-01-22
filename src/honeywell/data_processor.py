@@ -30,20 +30,23 @@ class DataProcessor:
         cat_features = self.config.cat_features
         num_features = self.config.num_features
         target = self.config.target
+        print(list(self.df.columns))
 
         self.df.rename(columns={"SOC (%)": "SOC"}, inplace=True)
-        self.df.rename(columns={"Voltage (V": "Voltage"}, inplace=True)
+        self.df.rename(columns={"Voltage (V)": "Voltage"}, inplace=True)
         self.df.rename(columns={"Current (A)": "Current"}, inplace=True)
         self.df.rename(columns={"Battery Temp (°C)": "Battery_Temp"}, inplace=True)
         self.df.rename(columns={"Ambient Temp (°C)": "Ambient_Temp"}, inplace=True)
         self.df.rename(columns={"Charging Duration (min)": "Charging_Duration"}, inplace=True)
-        self.df.rename(columns={"Degradation Rate (%)": "Degradation Rate"}, inplace=True)
+        self.df.rename(columns={"Degradation Rate (%)": "Degradation_Rate"}, inplace=True)
         self.df.rename(columns={"Efficiency (%)": "Efficiency"}, inplace=True)
         self.df.rename(columns={"Charging Cycles": "Charging_Cycles"}, inplace=True)
         self.df.rename(columns={"EV Model": "EV_Model"}, inplace=True)
         self.df.rename(columns={"Optimal Charging Duration Class": "Optimal_Charging_Duration_Class"}, inplace=True)
+        self.df.rename(columns={"Battery Type": "Battery_Type"}, inplace=True)
+        self.df.rename(columns={"Charging Mode": "Charging_Mode"}, inplace=True)
 
-    
+        print(list(self.df.columns),"2222222")
         # GOOD: Replaces only the missing values with -1.0, keeps other numbers as they are
         self.df["SOC"] = self.df["SOC"].fillna("-1")
         self.df["Voltage"] = self.df["Voltage"].fillna(-1.0)
@@ -51,13 +54,13 @@ class DataProcessor:
         self.df["Battery_Temp"] = self.df["Battery_Temp"].fillna(-1.0)
         self.df["Ambient_Temp"] = self.df["Ambient_Temp"].fillna(-1.0)
         self.df["Charging_Duration"] = self.df["Charging_Duration"].fillna(-1.0)
-        self.df["Degradation Rate"] = self.df["Degradation Rate"].fillna(-1.0)
+        self.df["Degradation_Rate"] = self.df["Degradation_Rate"].fillna(-1.0)
         self.df["Efficiency"] = self.df["Efficiency"].fillna(-1.0)  
         self.df["Battery_Type"] = self.df["Battery_Type"].fillna("Unknown")
         self.df["Charging_Cycles"] = self.df["Charging_Cycles"].fillna(-1.0)
         self.df["Charging_Mode"] = self.df["Charging_Mode"].fillna("Unknown")
         self.df["EV_Model"] = self.df["EV_Model"].fillna("Unknown")
-        self.df["Optimal Charging Duration Class"] = self.df["Optimal_Charging_Duration_Class"].fillna(-1.0)
+        self.df["Optimal_Charging_Duration_Class"] = self.df["Optimal_Charging_Duration_Class"].fillna(-1.0)
 
 
         # 1. Keep only rows that have 0, 1, or 2 (Cleaning)

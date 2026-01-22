@@ -1,5 +1,5 @@
 bundle:
-  name: marvel-characters
+  name: ev-battery-charging-mlops
 
 include:
   - resources/*
