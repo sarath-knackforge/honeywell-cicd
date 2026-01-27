@@ -5,7 +5,7 @@ on:
 
   push:
     branches:
-        - 'main'
+        - 'feature/stage'
 
 jobs:
   deploy:
@@ -60,7 +60,7 @@ jobs:
 
   
             databricks bundle run -t dev deployment
-            
+
             if [ "${{ matrix.environment }}" = "databricks-service-principal" ]; then
             echo "VERSION=$(cat version.txt)"
             git tag $VERSION
