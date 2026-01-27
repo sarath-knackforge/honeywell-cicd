@@ -1,0 +1,83 @@
+
+resources:
+  jobs:
+    deployment:
+      name: ${bundle.name}-workflow
+
+      tags:
+        project_name: "model-deploy"
+
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            # dependencies:
+            #   - ../dist/*.whl
+
+      tasks:
+
+        # ------------------------------------------------------------
+        # (0) TRAIN MODEL — produces candidate_run_id
+        # ------------------------------------------------------------
+        - task_key: train_model
+          environment_key: default
+          notebook_task:
+            notebook_path: "../scripts/train_model.ipynb"
+
+        # ------------------------------------------------------------
+        # (1) CHECK MODEL VERSION (compare metrics)
+        # ------------------------------------------------------------
+        - task_key: validating_the_model
+          environment_key: default
+          depends_on:
+            - task_key: train_model
+          notebook_task:
+            notebook_path: "../scripts/model_validation.ipynb"
+            base_parameters:
+              env: "${bundle.target}"
+              model_name: "{{tasks.train_model.values.model_name}}"
+              model_uri: "{{tasks.train_model.values.model_uri}}"
+              candidate_run_id: "{{tasks.train_model.values.candidate_run_id}}"
+              latest_version: "{{tasks.train_model.values.latest_version}}"
+
+        # ------------------------------------------------------------
+        # (2) SHOULD WE SKIP DEPLOYMENT? (metric comparison result)
+        # ------------------------------------------------------------
+        - task_key: deploy_model  # Renamed for clarity
+          depends_on:
+            - task_key: validating_the_model
+          notebook_task:
+            notebook_path: "../scripts/deploy_model.ipynb"
+            base_parameters:
+              # Keys here MUST match the dbutils.widgets.get() names
+              env: "${bundle.target}"
+              model_name: "{{tasks.train_model.values.model_name}}"
+              model_version: "{{tasks.train_model.values.model_version}}"
+              timeout_sec: "500"
+              wait_for_ready: "true"
+
+        # ------------------------------------------------------------
+        # (3) SMOKE TEST BEFORE DEPLOYMENT? (metric comparison result)
+        # ------------------------------------------------------------
+        - task_key: smoke_test_before_deployment
+          depends_on:
+            - task_key: deploy_model
+          notebook_task:
+            notebook_path: "../scripts/smoke_test.ipynb"
+            base_parameters:
+              # Keys here MUST match the dbutils.widgets.get() names
+              workspace_url: "{{tasks.deploy_model.values.workspace_url}}"
+              endpoint_name: "{{tasks.deploy_model.values.endpoint_name}}"
+
+        # ------------------------------------------------------------
+        # (4) SEND APPROVAL EMAIL (only if not skipped)
+        # ------------------------------------------------------------
+        - task_key: model_promotion_and_champion_to_challenger
+          depends_on:
+            - task_key: smoke_test_before_deployment # Ensuring promotion happens after smoke test
+          notebook_task:
+            notebook_path: "../scripts/promote_model.ipynb"
+            base_parameters:
+              # These keys MUST match the dbutils.widgets names exactly
+              candidate_run_id: "{{tasks.train_model.values.candidate_run_id}}"
+              model_name: "{{tasks.train_model.values.model_name}}"

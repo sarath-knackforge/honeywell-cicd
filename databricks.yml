@@ -2,7 +2,7 @@ bundle:
   name: ev-battery-charging-mlops
 
 include:
-  - resources/*
+  - resources/model_deploy_ipynb.yml
 
 artifacts:
   default:
@@ -31,7 +31,7 @@ targets:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
       profile: adb-7405619487184082
     variables:
-      schedule_pause_status: PAUSED
+      schedule_pause_status: UNPAUSED
 
   acc:
     presets:

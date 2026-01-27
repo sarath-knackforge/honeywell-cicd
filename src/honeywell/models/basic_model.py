@@ -86,37 +86,80 @@ class BasicModel:
         """
         logger.info("🔄 Defining preprocessing pipeline...")
 
+        # class CatToIntTransformer(BaseEstimator, TransformerMixin):
+        #     """Transformer that encodes categorical columns as integer codes for LightGBM.
+
+        #     Unknown categories at transform time are encoded as -1.
+        #     """
+
+        #     def __init__(self, cat_features: list[str]) -> None:
+        #         """Initialize the transformer with categorical feature names."""
+        #         self.cat_features = cat_features
+        #         self.cat_maps_ = {}
+
+        #     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
+        #         """Fit the transformer to the DataFrame X."""
+        #         self.fit_transform(X)
+        #         return self
+
+        #     def fit_transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
+        #         """Fit and transform the DataFrame X."""
+        #         X = X.copy()
+        #         for col in self.cat_features:
+        #             c = pd.Categorical(X[col])
+        #             # Build mapping: {category: code}
+        #             self.cat_maps_[col] = dict(zip(c.categories, range(len(c.categories)), strict=False))
+        #             X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
+        #         return X
+
+        #     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        #         """Transform the DataFrame X by encoding categorical features as integers."""
+        #         X = X.copy()
+        #         for col in self.cat_features:
+        #             X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
+        #         return X
         class CatToIntTransformer(BaseEstimator, TransformerMixin):
-            """Transformer that encodes categorical columns as integer codes for LightGBM.
-
-            Unknown categories at transform time are encoded as -1.
-            """
-
             def __init__(self, cat_features: list[str]) -> None:
-                """Initialize the transformer with categorical feature names."""
                 self.cat_features = cat_features
                 self.cat_maps_ = {}
 
-            def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> None:
-                """Fit the transformer to the DataFrame X."""
-                self.fit_transform(X)
-                return self
+            def _ensure_df(self, X):
+                if isinstance(X, pd.DataFrame):
+                    return X
 
-            def fit_transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
-                """Fit and transform the DataFrame X."""
-                X = X.copy()
-                for col in self.cat_features:
-                    c = pd.Categorical(X[col])
-                    # Build mapping: {category: code}
-                    self.cat_maps_[col] = dict(zip(c.categories, range(len(c.categories)), strict=False))
-                    X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
+                X = pd.DataFrame(X)
+
+                # Ensure correct column alignment
+                if X.shape[1] == len(self.cat_features):
+                    X.columns = self.cat_features
+                else:
+                    raise ValueError(
+                        f"Expected {len(self.cat_features)} categorical columns, "
+                        f"got {X.shape[1]}"
+                    )
+
                 return X
 
-            def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-                """Transform the DataFrame X by encoding categorical features as integers."""
-                X = X.copy()
+            def fit(self, X, y=None):
+                X = self._ensure_df(X).copy()
+
+                self.cat_maps_ = {}
                 for col in self.cat_features:
-                    X[col] = X[col].map(lambda val, col=col: self.cat_maps_[col].get(val, -1)).astype("category")
+                    c = pd.Categorical(X[col])
+                    self.cat_maps_[col] = dict(
+                        zip(c.categories, range(len(c.categories)), strict=False)
+                    )
+
+                return self
+
+            def transform(self, X):
+                X = self._ensure_df(X).copy()
+
+                for col in self.cat_features:
+                    X[col] = X[col].map(
+                        lambda val, col=col: self.cat_maps_[col].get(val, -1)
+                    ).astype("category")
+
                 return X
 
         preprocessor = ColumnTransformer(
@@ -266,7 +309,7 @@ class BasicModel:
             mlflow.log_artifact(cm_filename)
 
             logger.info("✅ Model, metrics, datasets, and artifacts logged to MLflow.")
-            return self.run_id
+            return self.run_id, self.model_info.model_uri, self.model_name
 
     # def log_model(self) -> None:
     #     """Log the model using MLflow."""

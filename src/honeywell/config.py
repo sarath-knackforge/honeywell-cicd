@@ -1,8 +1,7 @@
 from typing import Any
 
-from graphene import String
+# from typing import String
 import yaml
-from pydantic import BaseModel
 from pydantic import BaseModel
 import subprocess
 from typing import Optional, Any
@@ -40,6 +39,7 @@ class ProjectConfig(BaseModel):
             config_dict["catalog_name"] = config_dict[env]["catalog_name"]
             config_dict["schema_name"] = config_dict[env]["schema_name"]
             config_dict["input_data_path"] = config_dict["input_data_path"]
+            config_dict["target"] = config_dict["target"]
 
             return cls(**config_dict)
 
@@ -65,7 +65,7 @@ class GitTagsFromWidgets(BaseModel):
     branch: str
 
     @classmethod
-    def from_widgets(cls, dbutils: Optional[String] = None) -> "GitTagsFromWidgets":
+    def from_widgets(cls, dbutils: Optional[str] = None) -> "GitTagsFromWidgets":
         # 1) Try Databricks widgets
         try:
             dbutils.widgets.text("git_sha", "")

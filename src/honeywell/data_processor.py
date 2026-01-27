@@ -46,7 +46,6 @@ class DataProcessor:
         self.df.rename(columns={"Battery Type": "Battery_Type"}, inplace=True)
         self.df.rename(columns={"Charging Mode": "Charging_Mode"}, inplace=True)
 
-        print(list(self.df.columns),"2222222")
         # GOOD: Replaces only the missing values with -1.0, keeps other numbers as they are
         self.df["SOC"] = self.df["SOC"].fillna("-1")
         self.df["Voltage"] = self.df["Voltage"].fillna(-1.0)
