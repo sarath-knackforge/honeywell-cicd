@@ -60,22 +60,21 @@ name: CD-ACC
 on:
   push:
     branches:
-      - main
+      - main   # runs only after PR is merged into main
 
 jobs:
   deploy-acc:
     name: Deploy to ACC Databricks Workspace
     runs-on: ubuntu-latest
 
-    # Optional manual approval gate
     environment:
-      name: acc
+      name: acc   # optional GitHub Environment (approval gate)
 
     permissions:
       contents: read
 
     env:
-      # ACC WORKSPACE (DIFFERENT FROM DEV/STAGE)
+      # ACC workspace credentials
       DATABRICKS_HOST: ${{ vars.DATABRICKS_ACC_HOST }}
       DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_ACC_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_ACC_CLIENT_SECRET }}
@@ -97,7 +96,13 @@ jobs:
         uses: databricks/setup-cli@v0.246.0
 
       # ------------------------------------------------------------
-      # 3️⃣ Configure Databricks CLI (REQUIRED)
+      # 3️⃣ Install uv (REQUIRED for bundle build)
+      # ------------------------------------------------------------
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      # ------------------------------------------------------------
+      # 4️⃣ Configure Databricks CLI (ACC profile)
       # ------------------------------------------------------------
       - name: Configure Databricks CLI (ACC)
         run: |
@@ -109,12 +114,8 @@ jobs:
           client_secret = ${DATABRICKS_CLIENT_SECRET}
           EOF
 
-      - name: Verify Databricks config
-        run: |
-          sed -E 's/(client_secret\s*=\s*).*/\1****/g' ~/.databrickscfg
-
       # ------------------------------------------------------------
-      # 4️⃣ Deploy bundle to ACC workspace
+      # 5️⃣ Deploy bundle to ACC workspace
       # ------------------------------------------------------------
       - name: Deploy bundle to ACC workspace
         run: |
@@ -122,18 +123,3 @@ jobs:
             --profile acc \
             --var="git_sha=${{ github.sha }}" \
             --var="branch=main"
-
-      # ------------------------------------------------------------
-      # 5️⃣ Run ACC deployment job
-      # ------------------------------------------------------------
-      - name: Run ACC deployment workflow
-        run: |
-          databricks bundle run \
-            --profile acc \
-            -t acc deployment
-
-      # ------------------------------------------------------------
-      # 6️⃣ Final confirmation
-      # ------------------------------------------------------------
-      - name: Deployment completed
-        run: echo "✅ ACC deployment completed successfully"
