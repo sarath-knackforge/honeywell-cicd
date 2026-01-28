@@ -123,3 +123,23 @@ jobs:
             --profile acc \
             --var="git_sha=${{ github.sha }}" \
             --var="branch=main"
+          
+          databricks bundle run -t dev deployment
+                        
+          echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
+      
+      - name: Create PR from stage to main
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_PR_TOKEN }}
+        run: |
+          # Avoid duplicate PRs
+          if gh pr list --base main --head feature/stage --state open --json number | jq -e '. | length > 0'; then
+            echo "PR already exists. Skipping."
+            exit 0
+          fi
+          gh pr create \
+            --base release \
+            --head main \
+            --title "🚀 Promote stage → main (Databricks deploy successful)" \
+            --body "Automated PR after successful Databricks deployment."
