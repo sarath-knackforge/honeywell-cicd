@@ -7,6 +7,7 @@ from databricks.sdk.service.serving import (
     ServedEntityInput,
 )
 from loguru import logger
+from databricks.sdk.errors import ResourceDoesNotExist
 
 class ModelServing:
     """Manages model serving in Databricks for Marvel characters."""
@@ -59,13 +60,22 @@ class ModelServing:
             )
         ]
 
+        try:
+            # ✅ Reliable existence check
+            self.workspace.serving_endpoints.get(self.endpoint_name)
+            endpoint_exists = True
+        except ResourceDoesNotExist:
+            endpoint_exists = False
+
         if not endpoint_exists:
             self.workspace.serving_endpoints.create(
                 name=self.endpoint_name,
-                config=EndpointCoreConfigInput(served_entities=served_entities),
+                config=EndpointCoreConfigInput(
+                    served_entities=served_entities
+                ),
             )
             logger.info(
-                "✅ Serving endpoint CREATED for model=%s version=%s",
+                "✅ Serving endpoint CREATED model=%s version=%s",
                 self.model_name,
                 version,
             )
@@ -75,7 +85,7 @@ class ModelServing:
                 served_entities=served_entities,
             )
             logger.info(
-                "✅ Serving endpoint UPDATED for model=%s version=%s",
+                "✅ Serving endpoint UPDATED model=%s version=%s",
                 self.model_name,
                 version,
             )
