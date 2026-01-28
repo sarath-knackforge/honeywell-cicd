@@ -20,7 +20,9 @@ variables:
   schedule_pause_status:
     description: schedule pause status
     default: PAUSED
-
+  env:                          
+    description: Deployment environment
+    default: dev
 
 targets:
   dev:
