@@ -1,58 +1,3 @@
-# name: CD-ACC
-
-# on:
-#   push:
-#     branches:
-#       - main
-
-# jobs:
-#   deploy-acc:
-#     name: Deploy to ACC Databricks Workspace
-#     runs-on: ubuntu-latest
-
-#     environment:
-#       name: acc   # GitHub Environment (optional approval gate)
-
-#     permissions:
-#       contents: read
-
-#     env:
-#       # 👉 ACC WORKSPACE CREDENTIALS (DIFFERENT FROM DEV)
-#       DATABRICKS_HOST: ${{ vars.DATABRICKS_ACC_HOST }}
-#       DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_ACC_CLIENT_ID }}
-#       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_ACC_CLIENT_SECRET }}
-#       DATABRICKS_BUNDLE_ENV: acc
-
-#     steps:
-#       # ------------------------------------------------------------
-#       # 1️⃣ Checkout main branch
-#       # ------------------------------------------------------------
-#       - name: Checkout source
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0
-
-#       # ------------------------------------------------------------
-#       # 2️⃣ Install Databricks CLI
-#       # ------------------------------------------------------------
-#       - name: Install Databricks CLI
-#         uses: databricks/setup-cli@v0.246.0
-
-#       # ------------------------------------------------------------
-#       # 3️⃣ Deploy bundle to ACC workspace
-#       # ------------------------------------------------------------
-#       - name: Deploy bundle to ACC workspace
-#         run: |
-#           databricks bundle deploy \
-#             --var="git_sha=${{ github.sha }}" \
-#             --var="branch=main"
-
-#       # ------------------------------------------------------------
-#       # 4️⃣ Run ACC deployment job
-#       # ------------------------------------------------------------
-#       # - name: Run ACC deployment workflow
-#       #   run: |
-#       #     databricks bundle run deployment -t acc
 
 
 name: CD-ACC
@@ -124,7 +69,7 @@ jobs:
             --var="git_sha=${{ github.sha }}" \
             --var="branch=main"
           
-          databricks bundle run -t dev deployment
+          databricks bundle run -t acc deployment
                         
           echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
       

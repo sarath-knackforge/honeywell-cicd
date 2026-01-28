@@ -32,16 +32,18 @@ targets:
       profile: adb-7405619487184082
     variables:
       schedule_pause_status: UNPAUSED
+      env: dev
 
   acc:
     presets:
-      name_prefix: 'stage'
+      name_prefix: 'stage_'
     workspace:
       host: https://adb-7405613992811422.2.azuredatabricks.net/
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
       profile: adb-7405613992811422
     variables:
       schedule_pause_status: UNPAUSED
+      env: acc
 
   prd:
     mode: production
@@ -51,3 +53,4 @@ targets:
       profile: adb-7405619487184082
     variables:
       schedule_pause_status: PAUSED # normally UNPAUSED
+      env: prd
