@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir -p ~/.databricks
           cat > ~/.databrickscfg << EOF
-          [acc]
+          [adb-7405613992811422]
           host = ${DATABRICKS_HOST}
           client_id = ${DATABRICKS_CLIENT_ID}
           client_secret = ${DATABRICKS_CLIENT_SECRET}
