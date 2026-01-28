@@ -1,9 +1,11 @@
+
+
 name: CD-ACC
 
 on:
   push:
     branches:
-      - main
+      - main   # runs only after PR is merged into main
 
 jobs:
   deploy-acc:
@@ -11,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: acc   # GitHub Environment (optional approval gate)
+      name: acc   # optional GitHub Environment (approval gate)
 
     permissions:
       contents: read
 
     env:
-      # 👉 ACC WORKSPACE CREDENTIALS (DIFFERENT FROM DEV)
+      # ACC workspace credentials
       DATABRICKS_HOST: ${{ vars.DATABRICKS_ACC_HOST }}
       DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_ACC_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_ACC_CLIENT_SECRET }}
@@ -39,17 +41,50 @@ jobs:
         uses: databricks/setup-cli@v0.246.0
 
       # ------------------------------------------------------------
-      # 3️⃣ Deploy bundle to ACC workspace
+      # 3️⃣ Install uv (REQUIRED for bundle build)
+      # ------------------------------------------------------------
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      # ------------------------------------------------------------
+      # 4️⃣ Configure Databricks CLI (ACC profile)
+      # ------------------------------------------------------------
+      - name: Configure Databricks CLI (ACC)
+        run: |
+          mkdir -p ~/.databricks
+          cat > ~/.databrickscfg << EOF
+          [acc]
+          host = ${DATABRICKS_HOST}
+          client_id = ${DATABRICKS_CLIENT_ID}
+          client_secret = ${DATABRICKS_CLIENT_SECRET}
+          EOF
+
+      # ------------------------------------------------------------
+      # 5️⃣ Deploy bundle to ACC workspace
       # ------------------------------------------------------------
       - name: Deploy bundle to ACC workspace
         run: |
           databricks bundle deploy \
+            --profile acc \
             --var="git_sha=${{ github.sha }}" \
             --var="branch=main"
-
-      # ------------------------------------------------------------
-      # 4️⃣ Run ACC deployment job
-      # ------------------------------------------------------------
-      # - name: Run ACC deployment workflow
-      #   run: |
-      #     databricks bundle run deployment -t acc
+          
+          databricks bundle run -t acc deployment
+                        
+          echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
+      
+      - name: Create PR from stage to main
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_PR_TOKEN }}
+        run: |
+          # Avoid duplicate PRs
+          if gh pr list --base main --head feature/stage --state open --json number | jq -e '. | length > 0'; then
+            echo "PR already exists. Skipping."
+            exit 0
+          fi
+          gh pr create \
+            --base release \
+            --head main \
+            --title "🚀 Promote stage → main (Databricks deploy successful)" \
+            --body "Automated PR after successful Databricks deployment."
