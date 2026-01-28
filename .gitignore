@@ -1,7 +1,9 @@
 .env
 __pycache__/
-models/
 .ruff_cache/*
 .databricks/*
 .venv/
 templates/*
+trial_scripts/*
+models_o/*
+.vscode/*

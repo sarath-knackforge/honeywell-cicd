@@ -1,0 +1,18 @@
+{
+  "dataframe_records": [
+    {
+      "SOC": 64.1003510568888,
+      "Voltage": 3.67476760620143,
+      "Current": 15.882954180794671,
+      "Battery_Temp": 33.48039838117585,
+      "Ambient_Temp": 28.593944336666905,
+      "Charging_Duration": 38.181765283733874,
+      "Degradation_Rate": 8.06085124554772,
+      "Charging_Mode": "Slow",
+      "Efficiency": 98.38782975089046,
+      "Battery_Type": "Li-ion",
+      "Charging_Cycles": 310,
+      "EV_Model": "Model B"
+    }
+  ]
+}
