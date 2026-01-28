@@ -60,7 +60,7 @@ class ModelServing:
         ]
 
         if not endpoint_exists:
-            self.workspace.serving_endpoints.create_serving_endpoint_and_wait(
+            self.workspace.serving_endpoints.create(
                 name=self.endpoint_name,
                 config=EndpointCoreConfigInput(served_entities=served_entities),
             )
