@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: prod   # optional GitHub Environment (approval gate)
+      name: prd   # optional GitHub Environment (approval gate)
 
     permissions:
       contents: read
