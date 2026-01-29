@@ -23,6 +23,8 @@ resources:
           environment_key: default
           notebook_task:
             notebook_path: "../scripts/train_model.ipynb"
+            base_parameters:
+              env: "${bundle.target}"
 
         # ------------------------------------------------------------
         # (1) CHECK MODEL VERSION (compare metrics)
