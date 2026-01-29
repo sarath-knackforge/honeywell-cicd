@@ -50,9 +50,9 @@ targets:
   prd:
     mode: production
     workspace:
-      host: https://adb-7405619487184082.2.azuredatabricks.net/
+      host: https://adb-7405619393068997.17.azuredatabricks.net/
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
-      profile: adb-7405619487184082
+      profile: adb-7405619393068997
     variables:
-      schedule_pause_status: PAUSED # normally UNPAUSED
+      schedule_pause_status: UNPAUSED # normally UNPAUSED
       env: prd

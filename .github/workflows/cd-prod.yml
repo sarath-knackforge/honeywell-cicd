@@ -1,0 +1,72 @@
+
+
+name: CD-PROD
+
+on:
+  push:
+    branches:
+      - release   # runs only after PR is merged into main
+
+jobs:
+  deploy-prod:
+    name: Deploy to PROD Databricks Workspace
+    runs-on: ubuntu-latest
+
+    environment:
+      name: prod   # optional GitHub Environment (approval gate)
+
+    permissions:
+      contents: read
+
+    env:
+      # PROD workspace credentials
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_PROD_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_PROD_CLIENT_SECRET }}
+      DATABRICKS_BUNDLE_ENV: prod
+
+    steps:
+      # ------------------------------------------------------------
+      # 1️⃣ Checkout main branch
+      # ------------------------------------------------------------
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ------------------------------------------------------------
+      # 2️⃣ Install Databricks CLI
+      # ------------------------------------------------------------
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v0.246.0
+
+      # ------------------------------------------------------------
+      # 3️⃣ Install uv (REQUIRED for bundle build)
+      # ------------------------------------------------------------
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      # ------------------------------------------------------------
+      # 4️⃣ Configure Databricks CLI (PROD profile)
+      # ------------------------------------------------------------
+      - name: Configure Databricks CLI (PROD)
+        run: |
+          mkdir -p ~/.databricks
+          cat > ~/.databrickscfg << EOF
+          [adb-7405619393068997]
+          host = ${DATABRICKS_HOST}
+          client_id = ${DATABRICKS_CLIENT_ID}
+          client_secret = ${DATABRICKS_CLIENT_SECRET}
+          EOF
+
+      # ------------------------------------------------------------
+      # 5️⃣ Deploy bundle to PROD workspace
+      # ------------------------------------------------------------
+      - name: Deploy bundle to PROD workspace
+        run: |
+          databricks bundle deploy \
+            -t prd \
+            --var="git_sha=${{ github.sha }}" \
+            --var="branch=main"
+
+          # databricks bundle run -t prd deployment
