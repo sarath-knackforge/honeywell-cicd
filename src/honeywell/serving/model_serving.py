@@ -96,13 +96,14 @@ class ModelServing:
 
 
 
+# import datetime
+# from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
+# from databricks.sdk.errors import ResourceDoesNotExist, ResourceConflict
+
     def deploy_or_update_serving_endpoint(
-        self, version: str = "latest", workload_size: str = "Small", scale_to_zero: bool = True
+        self, version: str, workload_size: str = "Small", scale_to_zero: bool = True
     ) -> None:
         
-        if not version or version == "latest":
-            raise ValueError("A specific model version must be provided for production deployment.")
-
         served_entities = [
             ServedEntityInput(
                 entity_name=self.model_name,
@@ -113,37 +114,42 @@ class ModelServing:
         ]
 
         try:
-            self.workspace.serving_endpoints.get(self.endpoint_name)
-            endpoint_exists = True
-        except ResourceDoesNotExist:
-            endpoint_exists = False
-
-        if not endpoint_exists:
-            # 1. CREATE and WAIT
-            logger.info("Creating serving endpoint: %s...", self.endpoint_name)
-            op = self.workspace.serving_endpoints.create(
+            # 1. Check if it exists
+            endpoint = self.workspace.serving_endpoints.get(self.endpoint_name)
+            
+            # 2. IF IT EXISTS: Wait for any current updates to finish BEFORE trying to update again
+            # This prevents the 'ResourceConflict' error
+            logger.info("Endpoint exists. Ensuring no other updates are in progress...")
+            self.workspace.serving_endpoints.wait_get_serving_endpoint_not_updating(
                 name=self.endpoint_name,
-                config=EndpointCoreConfigInput(served_entities=served_entities),
+                timeout=datetime.timedelta(minutes=10)
             )
-            # The SDK's .result() waits automatically for completion
-            op.result(timeout=datetime.timedelta(minutes=20))
-            logger.info("✅ Serving endpoint CREATED and READY.")
-        else:
-            # 2. UPDATE and MANUAL WAIT
-            logger.info("Updating serving endpoint: %s...", self.endpoint_name)
+
+            # 3. Perform the UPDATE
+            logger.info("Updating serving endpoint: %s to version %s...", self.endpoint_name, version)
             self.workspace.serving_endpoints.update_config(
                 name=self.endpoint_name,
                 served_entities=served_entities,
             )
             
-            # 3. Use the SDK Waiter to block until 'READY' or 'NOT_UPDATING'
-            logger.info("Waiting for endpoint update to complete...")
+            # 4. Wait for the new update to reach 'READY'
             self.workspace.serving_endpoints.wait_get_serving_endpoint_not_updating(
-                name=self.endpoint_name, 
+                name=self.endpoint_name,
                 timeout=datetime.timedelta(minutes=20)
             )
             logger.info("✅ Serving endpoint UPDATED and READY.")
 
-        # # 4. Set Task Values for downstream tasks (Smoke Test)
-        # dbutils.jobs.taskValues.set(key="endpoint_name", value=self.endpoint_name)
-        # dbutils.jobs.taskValues.set(key="workspace_url", value=self.workspace.config.host)
+        except ResourceDoesNotExist:
+            # 5. CREATE and WAIT
+            logger.info("Creating NEW serving endpoint: %s...", self.endpoint_name)
+            op = self.workspace.serving_endpoints.create(
+                name=self.endpoint_name,
+                config=EndpointCoreConfigInput(served_entities=served_entities),
+            )
+            op.result(timeout=datetime.timedelta(minutes=20))
+            logger.info("✅ Serving endpoint CREATED and READY.")
+
+    # Set Task Values for Smoke Test
+    # dbutils.jobs.taskValues.set(key="endpoint_name", value=self.endpoint_name)
+    # dbutils.jobs.taskValues.set(key="workspace_url", value=self.workspace.config.host)
+
