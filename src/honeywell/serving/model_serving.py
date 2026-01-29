@@ -11,7 +11,7 @@ from databricks.sdk.errors import ResourceDoesNotExist
 import time
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
 from databricks.sdk.errors import ResourceDoesNotExist
-from datetime import datetime
+import datetime
 
 class ModelServing:
     """Manages model serving in Databricks for Marvel characters."""
