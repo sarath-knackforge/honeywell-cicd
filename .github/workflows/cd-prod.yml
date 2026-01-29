@@ -69,4 +69,4 @@ jobs:
             --var="git_sha=${{ github.sha }}" \
             --var="branch=${{ github.ref }}"
 
-          # databricks bundle run -t prd deployment
+          databricks bundle run -t prd deployment
