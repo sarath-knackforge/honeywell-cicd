@@ -23,7 +23,7 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
       DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_PROD_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_PROD_CLIENT_SECRET }}
-      DATABRICKS_BUNDLE_ENV: prod
+      DATABRICKS_BUNDLE_ENV: prd
 
     steps:
       # ------------------------------------------------------------
