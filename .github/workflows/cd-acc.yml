@@ -65,7 +65,7 @@ jobs:
       - name: Deploy bundle to ACC workspace
         run: |
           databricks bundle deploy \
-            --profile acc \
+            -t acc \
             --var="git_sha=${{ github.sha }}" \
             --var="branch=main"
           
