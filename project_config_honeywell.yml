@@ -4,11 +4,13 @@ prd:
 acc:
   catalog_name: honeywell_mlops_acc
   schema_name: honeywell
+  input_data_path: ../data/ev_battery_charging_data_cpy.csv
 dev:
   catalog_name: honeywell_mlops_dev
   schema_name: honeywell
+  input_data_path: ../data/ev_battery_charging_data.csv
 
-input_data_path: ../data/ev_battery_charging_data.csv
+
 
 experiment_name_basic: /Shared/honeywell-basic
 experiment_name_custom: /Shared/honeywell-custom
