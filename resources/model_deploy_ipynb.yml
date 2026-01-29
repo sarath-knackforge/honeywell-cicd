@@ -54,7 +54,7 @@ resources:
               # Keys here MUST match the dbutils.widgets.get() names
               env: "${bundle.target}"
               model_name: "{{tasks.train_model.values.model_name}}"
-              model_version: "{{tasks.train_model.values.latest_version}}"
+              latest_version: "{{tasks.train_model.values.latest_version}}"
               timeout_sec: "500"
               wait_for_ready: "true"
 
