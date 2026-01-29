@@ -1,6 +1,7 @@
 prd:
   catalog_name: honeywell_mlops_prd
   schema_name: honeywell
+  input_data_path: ../data/ev_battery_charging_data.csv
 acc:
   catalog_name: honeywell_mlops_acc
   schema_name: honeywell
