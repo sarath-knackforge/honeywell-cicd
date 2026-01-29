@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: prod   # optional GitHub Environment (approval gate)
+      name: prd   # optional GitHub Environment (approval gate)
 
     permissions:
       contents: read
@@ -23,7 +23,7 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_PROD_HOST }}
       DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_PROD_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_PROD_CLIENT_SECRET }}
-      DATABRICKS_BUNDLE_ENV: prod
+      DATABRICKS_BUNDLE_ENV: prd
 
     steps:
       # ------------------------------------------------------------
@@ -67,6 +67,6 @@ jobs:
           databricks bundle deploy \
             -t prd \
             --var="git_sha=${{ github.sha }}" \
-            --var="branch=main"
+            --var="branch=${{ github.ref }}"
 
           # databricks bundle run -t prd deployment
