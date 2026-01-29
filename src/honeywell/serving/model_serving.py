@@ -8,6 +8,10 @@ from databricks.sdk.service.serving import (
 )
 from loguru import logger
 from databricks.sdk.errors import ResourceDoesNotExist
+import time
+from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput
+from databricks.sdk.errors import ResourceDoesNotExist
+from datetime import datetime
 
 class ModelServing:
     """Manages model serving in Databricks for Marvel characters."""
@@ -32,24 +36,72 @@ class ModelServing:
         print(f"Latest model version: {latest_version}")
         return latest_version
 
+    # def deploy_or_update_serving_endpoint(
+    #     self, version: str = "latest", workload_size: str = "Small", scale_to_zero: bool = True
+    # ) -> None:
+    #     """Deploy or update the model serving endpoint in Databricks for Marvel characters.
+
+    #     :param version: Model version to serve (default: "latest")
+    #     :param workload_size: Size of the serving workload (default: "Small")
+    #     :param scale_to_zero: Whether to enable scale-to-zero (default: True)
+        
+    #     IMPORTANT:
+    #     - version MUST be explicitly provided
+    #     - this function must NOT resolve aliases or "latest"
+    #     - this function must NOT move Champion/Challenger aliases
+    #     """
+
+    #     if not version:
+    #         raise ValueError("Model version must be explicitly provided for deployment")
+    #     endpoint_exists = any(item.name == self.endpoint_name for item in self.workspace.serving_endpoints.list())
+
+    #     served_entities = [
+    #         ServedEntityInput(
+    #             entity_name=self.model_name,
+    #             entity_version=str(version),  
+    #             scale_to_zero_enabled=scale_to_zero,
+    #             workload_size=workload_size,
+    #         )
+    #     ]
+
+    #     try:
+    #         # ✅ Reliable existence check
+    #         self.workspace.serving_endpoints.get(self.endpoint_name)
+    #         endpoint_exists = True
+    #     except ResourceDoesNotExist:
+    #         endpoint_exists = False
+
+    #     if not endpoint_exists:
+    #         self.workspace.serving_endpoints.create(
+    #             name=self.endpoint_name,
+    #             config=EndpointCoreConfigInput(
+    #                 served_entities=served_entities
+    #             ),
+    #         )
+    #         logger.info(
+    #             "✅ Serving endpoint CREATED model=%s version=%s",
+    #             self.model_name,
+    #             version,
+    #         )
+    #     else:
+    #         self.workspace.serving_endpoints.update_config(
+    #             name=self.endpoint_name,
+    #             served_entities=served_entities,
+    #         )
+    #         logger.info(
+    #             "✅ Serving endpoint UPDATED model=%s version=%s",
+    #             self.model_name,
+    #             version,
+    #         )
+
+
+
     def deploy_or_update_serving_endpoint(
         self, version: str = "latest", workload_size: str = "Small", scale_to_zero: bool = True
     ) -> None:
-        """Deploy or update the model serving endpoint in Databricks for Marvel characters.
-
-        :param version: Model version to serve (default: "latest")
-        :param workload_size: Size of the serving workload (default: "Small")
-        :param scale_to_zero: Whether to enable scale-to-zero (default: True)
         
-        IMPORTANT:
-        - version MUST be explicitly provided
-        - this function must NOT resolve aliases or "latest"
-        - this function must NOT move Champion/Challenger aliases
-        """
-
-        if not version:
-            raise ValueError("Model version must be explicitly provided for deployment")
-        endpoint_exists = any(item.name == self.endpoint_name for item in self.workspace.serving_endpoints.list())
+        if not version or version == "latest":
+            raise ValueError("A specific model version must be provided for production deployment.")
 
         served_entities = [
             ServedEntityInput(
@@ -61,31 +113,37 @@ class ModelServing:
         ]
 
         try:
-            # ✅ Reliable existence check
             self.workspace.serving_endpoints.get(self.endpoint_name)
             endpoint_exists = True
         except ResourceDoesNotExist:
             endpoint_exists = False
 
         if not endpoint_exists:
-            self.workspace.serving_endpoints.create(
+            # 1. CREATE and WAIT
+            logger.info("Creating serving endpoint: %s...", self.endpoint_name)
+            op = self.workspace.serving_endpoints.create(
                 name=self.endpoint_name,
-                config=EndpointCoreConfigInput(
-                    served_entities=served_entities
-                ),
+                config=EndpointCoreConfigInput(served_entities=served_entities),
             )
-            logger.info(
-                "✅ Serving endpoint CREATED model=%s version=%s",
-                self.model_name,
-                version,
-            )
+            # The SDK's .result() waits automatically for completion
+            op.result(timeout=datetime.timedelta(minutes=20))
+            logger.info("✅ Serving endpoint CREATED and READY.")
         else:
+            # 2. UPDATE and MANUAL WAIT
+            logger.info("Updating serving endpoint: %s...", self.endpoint_name)
             self.workspace.serving_endpoints.update_config(
                 name=self.endpoint_name,
                 served_entities=served_entities,
             )
-            logger.info(
-                "✅ Serving endpoint UPDATED model=%s version=%s",
-                self.model_name,
-                version,
+            
+            # 3. Use the SDK Waiter to block until 'READY' or 'NOT_UPDATING'
+            logger.info("Waiting for endpoint update to complete...")
+            self.workspace.serving_endpoints.wait_get_serving_endpoint_not_updating(
+                name=self.endpoint_name, 
+                timeout=datetime.timedelta(minutes=20)
             )
+            logger.info("✅ Serving endpoint UPDATED and READY.")
+
+        # # 4. Set Task Values for downstream tasks (Smoke Test)
+        # dbutils.jobs.taskValues.set(key="endpoint_name", value=self.endpoint_name)
+        # dbutils.jobs.taskValues.set(key="workspace_url", value=self.workspace.config.host)
